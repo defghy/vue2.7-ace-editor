@@ -1,19 +1,19 @@
-import ace, { type Ace } from 'ace-builds';
-import { capitalize, defineComponent, markRaw, h } from 'vue';
-import ResizeObserver from 'resize-observer-polyfill';
+import ace, { type Ace } from 'ace-builds'
+import { defineComponent, markRaw, h } from 'vue'
+import ResizeObserver from 'resize-observer-polyfill'
 
-import type { VAceEditorInstance } from './types';
+import type { VAceEditorInstance } from './types'
 
-const Events = [
-  'blur',
-  'input',
-  'change',
-  'changeSelectionStyle',
-  'changeSession',
-  'copy',
-  'focus',
-  'paste',
-];
+const cacheStringFunction = (fn: Function) => {
+  const cache = Object.create(null)
+  return (str: string) => {
+    const hit = cache[str]
+    return hit || (cache[str] = fn(str))
+  }
+}
+const capitalize = cacheStringFunction((str: string) => str.charAt(0).toUpperCase() + str.slice(1))
+
+const Events = ['blur', 'input', 'change', 'changeSelectionStyle', 'changeSession', 'copy', 'focus', 'paste']
 
 export const VAceEditor = defineComponent({
   name: 'VAceEditor',
@@ -43,97 +43,99 @@ export const VAceEditor = defineComponent({
   },
   emits: ['update:value', 'init', ...Events],
   render(this: VAceEditorInstance) {
-    return h('div');
+    return h('div')
   },
   mounted(this: VAceEditorInstance) {
-    const editor = this._editor = markRaw(ace.edit(this.$el, {
-      placeholder: this.placeholder,
-      readOnly: this.readonly,
-      value: this.value,
-      mode: 'ace/mode/' + this.lang,
-      theme: 'ace/theme/' + this.theme,
-      wrap: this.wrap,
-      printMargin: this.printMargin,
-      useWorker: false,
-      minLines: this.minLines,
-      maxLines: this.maxLines,
-      ...this.options,
-    }));
-    this._contentBackup = this.value;
-    this._isSettingContent = false;
+    const editor = (this._editor = markRaw(
+      ace.edit(this.$el, {
+        placeholder: this.placeholder,
+        readOnly: this.readonly,
+        value: this.value,
+        mode: 'ace/mode/' + this.lang,
+        theme: 'ace/theme/' + this.theme,
+        wrap: this.wrap,
+        printMargin: this.printMargin,
+        useWorker: false,
+        minLines: this.minLines,
+        maxLines: this.maxLines,
+        ...this.options,
+      })
+    ))
+    this._contentBackup = this.value
+    this._isSettingContent = false
     editor.on('change', () => {
       // ref: https://github.com/CarterLi/vue3-ace-editor/issues/11
-      if (this._isSettingContent) return;
-      const content = editor.getValue();
-      this._contentBackup = content;
-      this.$emit('update:value', content);
-    });
+      if (this._isSettingContent) return
+      const content = editor.getValue()
+      this._contentBackup = content
+      this.$emit('input', content)
+    })
     Events.forEach(x => {
-      const eventName = 'on' + capitalize(x);
-      if (typeof this.$.vnode.props![eventName] === 'function') {
-        editor.on(x as any, this.$emit.bind(this, x));
+      const eventName = 'on' + capitalize(x)
+      if (typeof this.$listeners?.[eventName] === 'function') {
+        editor.on(x as any, (...args) => this.$emit(x, ...args))
       }
-    });
-    this._ro = new ResizeObserver(() => editor.resize());
-    this._ro.observe(this.$el);
-    this.$emit('init', editor);
+    })
+    this._ro = new ResizeObserver(() => editor.resize())
+    this._ro.observe(this.$el)
+    this.$emit('init', editor)
   },
   beforeUnmount(this: VAceEditorInstance) {
-    this._ro?.disconnect();
-    this._editor?.destroy();
+    this._ro?.disconnect()
+    this._editor?.destroy()
   },
   methods: {
     focus(this: VAceEditorInstance) {
-      this._editor.focus();
+      this._editor.focus()
     },
     blur(this: VAceEditorInstance) {
-      this._editor.blur();
+      this._editor.blur()
     },
     selectAll(this: VAceEditorInstance) {
-      this._editor.selectAll();
+      this._editor.selectAll()
     },
     getAceInstance(this: VAceEditorInstance) {
-      return this._editor;
+      return this._editor
     },
   },
   watch: {
     value(this: VAceEditorInstance, val: string) {
       if (this._contentBackup !== val) {
         try {
-          this._isSettingContent = true;
-          this._editor.setValue(val, 1);
+          this._isSettingContent = true
+          this._editor.setValue(val, 1)
         } finally {
-          this._isSettingContent = false;
+          this._isSettingContent = false
         }
-        this._contentBackup = val;
+        this._contentBackup = val
       }
     },
     theme(this: VAceEditorInstance, val: string) {
-      this._editor.setTheme('ace/theme/' + val);
+      this._editor.setTheme('ace/theme/' + val)
     },
     options(this: VAceEditorInstance, val: Partial<Ace.EditorOptions>) {
-      this._editor.setOptions(val);
+      this._editor.setOptions(val)
     },
     readonly(this: VAceEditorInstance, val: boolean) {
-      this._editor.setReadOnly(val);
+      this._editor.setReadOnly(val)
     },
     placeholder(this: VAceEditorInstance, val: string) {
-      this._editor.setOption('placeholder', val);
+      this._editor.setOption('placeholder', val)
     },
     wrap(this: VAceEditorInstance, val: boolean) {
-      this._editor.setWrapBehavioursEnabled(val);
+      this._editor.setWrapBehavioursEnabled(val)
     },
     printMargin(this: VAceEditorInstance, val: boolean | number) {
-      this._editor.setOption('printMargin', val);
+      this._editor.setOption('printMargin', val)
     },
     lang(this: VAceEditorInstance, val: string) {
-      this._editor.setOption('mode', 'ace/mode/' + val);
+      this._editor.setOption('mode', 'ace/mode/' + val)
     },
     minLines(this: VAceEditorInstance, val: number) {
-      this._editor.setOption('minLines', val);
+      this._editor.setOption('minLines', val)
     },
     maxLines(this: VAceEditorInstance, val: number) {
-      this._editor.setOption('maxLines', val);
+      this._editor.setOption('maxLines', val)
     },
-  }
-});
+  },
+})
