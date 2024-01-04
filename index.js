@@ -1,16 +1,15 @@
 import ace from 'ace-builds';
-import { capitalize, defineComponent, markRaw, h } from 'vue';
+import { defineComponent, markRaw, h } from 'vue';
 import ResizeObserver from 'resize-observer-polyfill';
-const Events = [
-    'blur',
-    'input',
-    'change',
-    'changeSelectionStyle',
-    'changeSession',
-    'copy',
-    'focus',
-    'paste',
-];
+const cacheStringFunction = (fn) => {
+    const cache = Object.create(null);
+    return (str) => {
+        const hit = cache[str];
+        return hit || (cache[str] = fn(str));
+    };
+};
+const capitalize = cacheStringFunction((str) => str.charAt(0).toUpperCase() + str.slice(1));
+const Events = ['blur', 'input', 'change', 'changeSelectionStyle', 'changeSession', 'copy', 'focus', 'paste'];
 export const VAceEditor = defineComponent({
     name: 'VAceEditor',
     props: {
@@ -42,7 +41,7 @@ export const VAceEditor = defineComponent({
         return h('div');
     },
     mounted() {
-        const editor = this._editor = markRaw(ace.edit(this.$el, {
+        const editor = (this._editor = markRaw(ace.edit(this.$el, {
             placeholder: this.placeholder,
             readOnly: this.readonly,
             value: this.value,
@@ -54,7 +53,7 @@ export const VAceEditor = defineComponent({
             minLines: this.minLines,
             maxLines: this.maxLines,
             ...this.options,
-        }));
+        })));
         this._contentBackup = this.value;
         this._isSettingContent = false;
         editor.on('change', () => {
@@ -63,12 +62,13 @@ export const VAceEditor = defineComponent({
                 return;
             const content = editor.getValue();
             this._contentBackup = content;
-            this.$emit('update:value', content);
+            this.$emit('input', content);
         });
         Events.forEach(x => {
+            var _a;
             const eventName = 'on' + capitalize(x);
-            if (typeof this.$.vnode.props[eventName] === 'function') {
-                editor.on(x, this.$emit.bind(this, x));
+            if (typeof ((_a = this.$listeners) === null || _a === void 0 ? void 0 : _a[eventName]) === 'function') {
+                editor.on(x, (...args) => this.$emit(x, ...args));
             }
         });
         this._ro = new ResizeObserver(() => editor.resize());
@@ -134,6 +134,6 @@ export const VAceEditor = defineComponent({
         maxLines(val) {
             this._editor.setOption('maxLines', val);
         },
-    }
+    },
 });
 //# sourceMappingURL=index.js.map

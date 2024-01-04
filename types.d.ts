@@ -1,4 +1,4 @@
-import { ComponentPublicInstance } from 'vue';
+import { ComponentPublicInstance, LegacyPublicInstance } from 'vue';
 import type { Ace } from 'ace-builds';
 
 export interface VAceEditorPrivate {

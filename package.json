@@ -1,13 +1,12 @@
 {
-  "name": "vue3-ace-editor",
+  "name": "vue2.7-ace-editor",
   "version": "2.2.4",
-  "description": "Like vue2-ace-editor but more functional and supports Vue 3",
+  "description": "Like vue2-ace-editor but more functional and supports Vue 2.7 && vite",
   "main": "index.js",
   "module": "index.js",
   "type": "module",
   "types": "index.d.ts",
-  "repository": "git@github.com:CarterLi/vue3-ace-editor.git",
-  "author": "李通洲 <carter.li@eoitek.com>",
+  "repository": "git@github.com:defghy/vue2.7-ace-editor.git",
   "license": "MIT",
   "scripts": {
     "build": "tsc -p ."
@@ -17,7 +16,7 @@
   },
   "peerDependencies": {
     "ace-builds": "*",
-    "vue": "^3"
+    "vue": "^2.7"
   },
   "devDependencies": {
     "typescript": "^5.2.2"
