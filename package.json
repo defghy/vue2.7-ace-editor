@@ -6,7 +6,7 @@
   "module": "index.js",
   "type": "module",
   "types": "index.d.ts",
-  "repository": "git@github.com:defghy/vue2.7-ace-editor.git",
+  "repository": "git@github.com:yuhufe/vue2.7-ace-editor.git",
   "license": "MIT",
   "scripts": {
     "build": "tsc -p ."
